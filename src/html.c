@@ -10,6 +10,40 @@
 #include "syntax_extension.h"
 #include "html.h"
 #include "render.h"
+#include "utf8.h"
+
+int should_insert_newline_for_softbreak(cmark_node *node) {
+  cmark_node *prev = cmark_node_previous(node);
+  cmark_node *next = cmark_node_next(node);
+
+  if (prev == NULL || next == NULL || prev->type != CMARK_NODE_TEXT ||
+      next->type != CMARK_NODE_TEXT)
+    return 1;
+
+  int32_t next_first = 0;
+  cmark_utf8proc_iterate(next->as.literal.data, next->as.literal.len,
+                         &next_first);
+
+  int32_t prev_last = 0;
+  for (int i = 0; i < prev->as.literal.len;) {
+    int len = cmark_utf8proc_iterate(prev->as.literal.data + i,
+                                     prev->as.literal.len - i, &prev_last);
+    if (len <= 0)
+      break;
+    i += len;
+  }
+  if (prev_last == 0)
+    return 1;
+
+  int is_prev_half = 0, is_next_half = 0, eaw;
+
+  eaw = cmark_utf8proc_east_asian_width(prev_last);
+  is_prev_half = eaw == Na || eaw == N || eaw == H;
+  eaw = cmark_utf8proc_east_asian_width(next_first);
+  is_next_half = eaw == Na || eaw == N || eaw == H;
+
+  return is_prev_half || is_next_half;
+}
 
 // Functions to convert cmark_nodes to HTML strings.
 
@@ -321,7 +355,7 @@ static int S_render_node(cmark_html_renderer *renderer, cmark_node *node,
       cmark_strbuf_puts(html, "<br />\n");
     } else if (options & CMARK_OPT_NOBREAKS) {
       cmark_strbuf_putc(html, ' ');
-    } else {
+    } else if (should_insert_newline_for_softbreak(node)) {
       cmark_strbuf_putc(html, '\n');
     }
     break;

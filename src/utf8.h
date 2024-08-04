@@ -28,6 +28,19 @@ int cmark_utf8proc_is_space(int32_t uc);
 CMARK_GFM_EXPORT
 int cmark_utf8proc_is_punctuation(int32_t uc);
 
+enum {
+  A,
+  F,
+  H,
+  N,
+  Na,
+  W,
+  UNK,
+};
+
+CMARK_GFM_EXPORT
+int cmark_utf8proc_east_asian_width(int32_t uc);
+
 #ifdef __cplusplus
 }
 #endif
