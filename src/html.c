@@ -485,9 +485,9 @@ static int S_render_node(cmark_html_renderer *renderer, cmark_node *node,
         cmark_strbuf_puts(html, n);
       }
 
-      cmark_strbuf_puts(html, "\" data-footnote-ref>");
+      cmark_strbuf_puts(html, "\" data-footnote-ref>[");
       houdini_escape_href(html, node->as.literal.data, node->as.literal.len);
-      cmark_strbuf_puts(html, "</a></sup>");
+      cmark_strbuf_puts(html, "]</a></sup>");
     }
     break;
 
